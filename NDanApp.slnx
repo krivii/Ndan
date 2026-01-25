@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NDanApp.Backend/NDanApp.Backend.csproj" />
+    <Project Path="src/NDanApp.Shared/NDanApp.Shared.csproj" />
+    <Project Path="src/NDanApp.Tests/NDanApp.Tests.csproj" />
+  </Folder>
+</Solution>
