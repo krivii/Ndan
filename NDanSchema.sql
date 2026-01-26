@@ -23,7 +23,7 @@ CREATE TABLE guests (
 );
 
 
-CREATE UNIQUE INDEX ix_guests_event_token ON guests(event_id, invite_token);
+
 CREATE INDEX ix_guests_event ON guests(event_id);
 
 CREATE TABLE media (
@@ -45,8 +45,8 @@ CREATE TABLE media (
     -- 0=uploaded, 1=processing, 2=ready, 3=failed
 );
 
-CREATE INDEX ix_media_event_id_created_at ON media(event_id, created_at DESC); 
-CREATE INDEX ix_media_event_id_like_count ON media(event_id, like_count DESC); 
+CREATE INDEX ix_media_event_id_created_utc ON media(event_id, created_utc DESC); 
+
 
 
 CREATE TABLE likes (
