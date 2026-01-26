@@ -3,8 +3,7 @@ using NDanApp.Backend.Repositories;
 
 public interface IEventRepository : IRepository<Event>
 {
-    Task<Event?> GetByInviteTokenHashAsync(string tokenHash);
-    Task<bool> IsInviteTokenUniqueAsync(string tokenHash);
-    Task<IEnumerable<Event>> GetActiveEventsAsync();
-    Task<Event?> GetWithStatsAsync(Guid eventId);
+    Task<Event?> GetByInviteTokenHashAsync(string tokenHash, CancellationToken ct = default);
+    Task<bool> IsInviteTokenUniqueAsync(string tokenHash, CancellationToken ct = default);
+    Task<IEnumerable<Event>> GetActiveEventsAsync(CancellationToken ct = default);
 }

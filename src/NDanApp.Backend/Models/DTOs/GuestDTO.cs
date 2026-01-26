@@ -4,10 +4,18 @@ namespace NDanApp.Backend.Models.DTOs;
 
 public class CreateGuestRequest
 {
-    [Required]
+    [Required(ErrorMessage = "Event ID is required")]
     public Guid EventId { get; set; }
 
-    [MaxLength(100)]
+    [MaxLength(100, ErrorMessage = "Nickname cannot exceed 100 characters")]
+    [MinLength(1, ErrorMessage = "Nickname must be at least 1 character")]
+    public string? Nickname { get; set; }
+}
+
+public class UpdateGuestRequest
+{
+    [MaxLength(100, ErrorMessage = "Nickname cannot exceed 100 characters")]
+    [MinLength(1, ErrorMessage = "Nickname must be at least 1 character")]
     public string? Nickname { get; set; }
 }
 

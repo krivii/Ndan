@@ -4,12 +4,22 @@ namespace NDanApp.Backend.Models.DTOs;
 
 public class AddLikeRequest
 {
-    [Required]
+    [Required(ErrorMessage = "Media ID is required")]
     public Guid MediaId { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Guest ID is required")]
     public Guid GuestId { get; set; }
 }
+
+public class RemoveLikeRequest
+{
+    [Required(ErrorMessage = "Media ID is required")]
+    public Guid MediaId { get; set; }
+
+    [Required(ErrorMessage = "Guest ID is required")]
+    public Guid GuestId { get; set; }
+}
+
 
 public record LikeCreated(
     Guid Id,

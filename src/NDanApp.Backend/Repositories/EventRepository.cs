@@ -7,30 +7,23 @@ public class EventRepository : Repository<Event>, IEventRepository
 {
     public EventRepository(AppDbContext context) : base(context) { }
 
-    public async Task<Event?> GetByInviteTokenHashAsync(string tokenHash)
+    public async Task<Event?> GetByInviteTokenHashAsync(string tokenHash, CancellationToken ct = default)
     {
         return await _context.Events
-            .FirstOrDefaultAsync(e => e.InviteTokenHash == tokenHash);
+            .FirstOrDefaultAsync(e => e.InviteTokenHash == tokenHash, ct);
     }
 
-    public async Task<bool> IsInviteTokenUniqueAsync(string tokenHash)
+    public async Task<bool> IsInviteTokenUniqueAsync(string tokenHash, CancellationToken ct = default)
     {
         return !await _context.Events
-            .AnyAsync(e => e.InviteTokenHash == tokenHash);
+            .AnyAsync(e => e.InviteTokenHash == tokenHash, ct);
     }
 
-    public async Task<IEnumerable<Event>> GetActiveEventsAsync()
+    public async Task<IEnumerable<Event>> GetActiveEventsAsync(CancellationToken ct = default)
     {
         return await _context.Events
             .Where(e => e.IsActive)
             .OrderByDescending(e => e.CreatedUtc)
-            .ToListAsync();
-    }
-
-    public async Task<Event?> GetWithStatsAsync(Guid eventId)
-    {
-        return await _context.Events
-            .Where(e => e.EventId == eventId)
-            .FirstOrDefaultAsync();
+            .ToListAsync(ct);
     }
 }
