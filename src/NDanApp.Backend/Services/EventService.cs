@@ -114,14 +114,21 @@ public class EventService : IEventService
         return true;
     }
 
-    private string GenerateInviteToken()
-    {
-        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        var random = new Random();
-        return new string(Enumerable.Range(0, 12)
-            .Select(_ => chars[random.Next(chars.Length)])
-            .ToArray());
-    }
+private string GenerateInviteToken()
+{
+    // Generate cryptographically secure random bytes
+    var randomBytes = new byte[9]; // 9 bytes = 12 chars in base64
+    RandomNumberGenerator.Fill(randomBytes);
+    
+    // Convert to base64 and clean up
+    var token = Convert.ToBase64String(randomBytes)
+        .Replace("+", "")
+        .Replace("/", "")
+        .Replace("=", "")
+        .ToUpper();
+    
+    return token[..12]; // Take first 12 characters
+}
 
     private string HashToken(string token)
     {
