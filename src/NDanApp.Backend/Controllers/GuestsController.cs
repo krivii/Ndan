@@ -72,4 +72,26 @@ public class GuestsController : ControllerBase
         
         return Ok(guests);
     }
+
+    /// <summary>
+    /// Find guest by fingerprint
+    /// </summary>
+    [HttpGet("find")]
+    [ProducesResponseType(typeof(GuestCreated), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<GuestCreated>> FindGuest(
+        [FromQuery] Guid eventId,
+        [FromQuery] string fingerprint,
+        CancellationToken ct)
+    {
+        _logger.LogInformation("Finding guest for event {EventId} with fingerprint {Fingerprint}", 
+            eventId, fingerprint);
+        
+        var guest = await _guestService.FindByFingerprintAsync(eventId, fingerprint, ct);
+        
+        if (guest == null)
+            return NotFound();
+        
+        return Ok(guest);
+    }
 }

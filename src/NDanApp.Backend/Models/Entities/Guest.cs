@@ -25,6 +25,10 @@ public class Guest
     [ForeignKey("EventId")]
     public Event Event { get; set; } = null!;
 
+    [Column("fingerprint")]
+    [MaxLength(100)]
+    public string? Fingerprint { get; set; }
+
     public ICollection<Media> MediaItems { get; set; } = new List<Media>();
     public ICollection<Like> Likes { get; set; } = new List<Like>();
 

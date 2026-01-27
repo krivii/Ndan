@@ -20,18 +20,19 @@ public class GuestService : IGuestService
         _likeRepo = likeRepo;
     }
 
-    public async Task<GuestCreated> CreateGuestAsync(CreateGuestRequest request, CancellationToken ct = default)
+public async Task<GuestCreated> CreateGuestAsync(CreateGuestRequest request, CancellationToken ct = default)
+{
+    var guest = new Guest
     {
-        var guest = new Guest
-        {
-            EventId = request.EventId,
-            Nickname = request.Nickname
-        };
+        EventId = request.EventId,
+        Nickname = request.Nickname,
+        Fingerprint = request.Fingerprint // Store fingerprint
+    };
 
-        await _guestRepo.AddAsync(guest, ct);
+    await _guestRepo.AddAsync(guest, ct);
 
-        return new GuestCreated(guest.GuestId, guest.Nickname);
-    }
+    return new GuestCreated(guest.GuestId, guest.Nickname, guest.EventId);
+}
 
     public async Task<GuestDetail?> GetGuestDetailAsync(Guid guestId, CancellationToken ct = default)
     {
@@ -63,5 +64,14 @@ public class GuestService : IGuestService
         }
 
         return result.OrderByDescending(g => g.MediaCount);
+    }
+
+    public async Task<GuestCreated?> FindByFingerprintAsync(Guid eventId, string fingerprint, CancellationToken ct = default)
+    {
+        var guest = await _guestRepo.GetByEventAndFingerprintAsync(eventId, fingerprint, ct);
+        
+        if (guest == null) return null;
+        
+        return new GuestCreated(guest.GuestId, guest.Nickname, guest.EventId);
     }
 }
