@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 type MediaItem = {
   mediaId: string;
@@ -16,39 +17,25 @@ export default function GalleryPage() {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Redirect to landing page if not authenticated
   useEffect(() => {
-    if (!document.cookie.includes('guest_id=')) {
-      router.replace('/landing');
+    const cookie = Cookies.get('event_cookie');
+    if (!cookie) {
+      router.replace('/set-name');
+      return;
     }
-  }, [router]);
-  
 
-  // Fetch media (for now static demo)
-  useEffect(() => {
-    fetch('/api/media') // Replace with real API later
+    fetch('/api/media')
       .then(res => res.json())
       .then(setMedia)
       .finally(() => setLoading(false));
-  }, []);
+  }, [router]);
 
   return (
     <main className="min-h-screen bg-[var(--dusty-blue-light)] text-[var(--text-dark)] p-2">
       <header className="text-center py-4">
         <h1 className="text-2xl font-semibold">Share Your Memories 💙</h1>
-        <p className="text-sm opacity-80">
-          Upload photos, videos, and voice messages from today
-        </p>
       </header>
 
-      {/* Upload Button */}
-      <div className="fixed bottom-4 left-0 right-0 flex justify-center">
-        <button className="bg-[var(--rose)] text-white px-6 py-3 rounded-full shadow-lg text-lg">
-          Upload
-        </button>
-      </div>
-
-      {/* Media Grid */}
       {loading && <p className="text-center mt-10">Loading memories…</p>}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pb-24">
