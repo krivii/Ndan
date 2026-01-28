@@ -10,6 +10,9 @@ public class CreateGuestRequest
     [MaxLength(100, ErrorMessage = "Nickname cannot exceed 100 characters")]
     [MinLength(1, ErrorMessage = "Nickname must be at least 1 character")]
     public string? Nickname { get; set; }
+    
+    [MaxLength(100)]
+    public string? Fingerprint { get; set; }
 }
 
 public class UpdateGuestRequest

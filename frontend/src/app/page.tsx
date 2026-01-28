@@ -1,43 +1,70 @@
-import { Camera, QrCode } from 'lucide-react';
-import Logo from './components/Logo';
-import InviteForm from './components/InviteForm';
+'use client';
 
-export default function LandingPage() {
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+type MediaItem = {
+  mediaId: string;
+  storageUrl: string;
+  mediaType: 'Image' | 'Video';
+  createdUtc: string;
+  likeCount: number;
+};
+
+export default function GalleryPage() {
+  const router = useRouter();
+  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Redirect to landing page if not authenticated
+  useEffect(() => {
+    if (!document.cookie.includes('guest_id=')) {
+      router.replace('/landing');
+    }cd de
+  }, [router]);
+
+  // Fetch media (for now static demo)
+  useEffect(() => {
+    fetch('/api/media') // Replace with real API later
+      .then(res => res.json())
+      .then(setMedia)
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream via-soft-white to-primary-light/20">
-      <div className="min-h-screen flex flex-col">
-        <header className="p-6 md:p-8">
-          <Logo />
-        </header>
+    <main className="min-h-screen bg-[var(--dusty-blue-light)] text-[var(--text-dark)] p-2">
+      <header className="text-center py-4">
+        <h1 className="text-2xl font-semibold">Share Your Memories 💙</h1>
+        <p className="text-sm opacity-80">
+          Upload photos, videos, and voice messages from today
+        </p>
+      </header>
 
-        <main className="flex-1 flex items-center justify-center px-6 pb-20">
-          <div className="w-full max-w-lg space-y-8 text-center">
-            <div className="space-y-4">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                <QrCode className="w-10 h-10 text-primary" />
-              </div>
-              <h2 className="text-4xl md:text-5xl font-serif font-bold text-text-dark">
-                Join the Celebration
-              </h2>
-              <p className="text-lg text-primary-dark max-w-md mx-auto">
-                Scan the QR code or enter your invite code to share photos and memories.
-              </p>
-            </div>
+      {/* Upload Button */}
+      <div className="fixed bottom-4 left-0 right-0 flex justify-center">
+        <button className="bg-[var(--rose)] text-white px-6 py-3 rounded-full shadow-lg text-lg">
+          Upload
+        </button>
+      </div>
 
-            <InviteForm />
-            
-            <div className="pt-8 border-t border-primary-light/30">
-              <p className="text-sm text-primary-dark">
-                Don't have a code? Ask the event host!
-              </p>
+      {/* Media Grid */}
+      {loading && <p className="text-center mt-10">Loading memories…</p>}
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pb-24">
+        {media.map(item => (
+          <div key={item.mediaId} className="bg-white rounded-lg overflow-hidden shadow">
+            {item.mediaType === 'Image' ? (
+              <img src={item.storageUrl} className="w-full h-40 object-cover" />
+            ) : (
+              <video src={item.storageUrl} className="w-full h-40 object-cover" controls />
+            )}
+            <div className="p-1 text-xs flex justify-between">
+              <span>❤️ {item.likeCount}</span>
+              <span>{new Date(item.createdUtc).toLocaleTimeString()}</span>
             </div>
           </div>
-        </main>
-
-        <footer className="p-6 text-center text-sm text-primary-dark">
-          <p>Made with love for your special day 💙</p>
-        </footer>
+        ))}
       </div>
-    </div>
+    </main>
   );
 }

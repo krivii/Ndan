@@ -27,4 +27,10 @@ public class GuestRepository : Repository<Guest>, IGuestRepository
         return await _context.Guests
             .CountAsync(g => g.EventId == eventId, ct);
     }
+
+    public async Task<Guest?> GetByEventAndFingerprintAsync(Guid eventId, string fingerprint, CancellationToken ct = default)
+{
+    return await _context.Guests
+        .FirstOrDefaultAsync(g => g.EventId == eventId && g.Fingerprint == fingerprint, ct);
+}
 }

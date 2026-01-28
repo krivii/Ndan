@@ -76,10 +76,12 @@ const validateAndCheckGuest = async () => {
 }
 };
 
-  const handleGuestCreated = (guestId: string) => {
+const handleGuestCreated = (guestId: string) => {
+  if (guestId) {
     setStoredGuestId(guestId);
-    router.push(`/event/${eventId}`);
-  };
+  }
+  router.push(`/event/${eventId}`);
+};
 
   if (loading) {
     return (
