@@ -33,17 +33,15 @@ builder.Services.AddHttpClient();
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddPolicy("AllowLocalhost", policy =>
     {
-        var origins = builder.Configuration["Cors:AllowedOrigins"]?.Split(',') 
-            ?? new[] { "http://localhost:3000" };
-        
-        policy.WithOrigins(origins)
-              .AllowAnyMethod()
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
               .AllowAnyHeader()
+              .AllowAnyMethod()
               .AllowCredentials();
     });
 });
+
 
 // Controllers with JSON options
 builder.Services.AddControllers()
@@ -101,7 +99,7 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
-app.UseCors("AllowFrontend");
+app.UseCors("AllowLocalhost");
 app.UseAuthorization();
 app.MapControllers();
 

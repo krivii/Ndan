@@ -53,8 +53,7 @@ public record EventListItem(
     string Name,
     DateTimeOffset? StartDate,
     bool IsActive,
-    int MediaCount,
-    int GuestCount
+    int MediaCount
 );
 
 // For event detail/dashboard
@@ -66,7 +65,6 @@ public record EventDetail(
     bool IsActive,
     DateTimeOffset Created,
     int MediaCount,
-    int GuestCount,
     int TotalLikes
 );
 

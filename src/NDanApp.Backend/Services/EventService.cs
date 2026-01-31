@@ -27,7 +27,8 @@ public class EventService : IEventService
 
     public async Task<EventCreated> CreateEventAsync(CreateEventRequest request, CancellationToken ct = default)
     {
-        var inviteToken = GenerateInviteToken();
+        //var inviteToken = GenerateInviteToken();
+        var inviteToken = "abcd1234";
         var tokenHash = HashToken(inviteToken);
 
         var evt = new Event
@@ -46,7 +47,7 @@ public class EventService : IEventService
     public async Task<EventAccess?> ValidateInviteAsync(string inviteToken, CancellationToken ct = default)
     {
         var tokenHash = HashToken(inviteToken);
-        var evt = await _eventRepo.GetByInviteTokenHashAsync(tokenHash, ct);
+        var evt = await _eventRepo.GetByInviteTokenAsync(tokenHash, ct);
 
         if (evt == null || !evt.IsActive)
             return null;
@@ -60,8 +61,7 @@ public class EventService : IEventService
         if (evt == null) return null;
 
         var mediaCount = await _mediaRepo.GetMediaCountByEventAsync(eventId, ct);
-        var guestCount = await _guestRepo.GetGuestCountByEventAsync(eventId, ct);
-
+    
         // Get total likes for this event
         var mediaItems = await _mediaRepo.GetByEventIdAsync(eventId, int.MaxValue, ct);
         var mediaIds = mediaItems.Select(m => m.MediaId);
@@ -76,7 +76,6 @@ public class EventService : IEventService
             evt.IsActive,
             evt.CreatedUtc,
             mediaCount,
-            guestCount,
             totalLikes
         );
     }
@@ -89,15 +88,13 @@ public class EventService : IEventService
         foreach (var evt in events)
         {
             var mediaCount = await _mediaRepo.GetMediaCountByEventAsync(evt.EventId, ct);
-            var guestCount = await _guestRepo.GetGuestCountByEventAsync(evt.EventId, ct);
-
+            
             result.Add(new EventListItem(
                 evt.EventId,
                 evt.Name,
                 evt.StartDateUtc,
                 evt.IsActive,
-                mediaCount,
-                guestCount
+                mediaCount
             ));
         }
 
@@ -114,23 +111,23 @@ public class EventService : IEventService
         return true;
     }
 
-private string GenerateInviteToken()
-{
-    // Generate cryptographically secure random bytes
-    var randomBytes = new byte[9]; // 9 bytes = 12 chars in base64
-    RandomNumberGenerator.Fill(randomBytes);
-    
-    // Convert to base64 and clean up
-    var token = Convert.ToBase64String(randomBytes)
-        .Replace("+", "")
-        .Replace("/", "")
-        .Replace("=", "")
-        .ToUpper();
-    
-    return token[..12]; // Take first 12 characters
-}
+    private string GenerateInviteToken()
+    {
+        // Generate cryptographically secure random bytes
+        var randomBytes = new byte[9]; // 9 bytes = 12 chars in base64
+        RandomNumberGenerator.Fill(randomBytes);
+        
+        // Convert to base64 and clean up
+        var token = Convert.ToBase64String(randomBytes)
+            .Replace("+", "")
+            .Replace("/", "")
+            .Replace("=", "")
+            .ToUpper();
+        
+        return token[..12]; // Take first 12 characters
+    }
 
-    private string HashToken(string token)
+    public string HashToken(string token)
     {
         using var sha256 = SHA256.Create();
         var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(token));

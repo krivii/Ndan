@@ -1,6 +1,8 @@
 using NDanApp.Backend.Models.DTOs;
 using NDanApp.Backend.Models.Entities;
 using NDanApp.Backend.Repositories;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace NDanApp.Backend.Services;
 
@@ -9,30 +11,49 @@ public class GuestService : IGuestService
     private readonly IGuestRepository _guestRepo;
     private readonly IMediaRepository _mediaRepo;
     private readonly ILikeRepository _likeRepo;
+    private readonly IEventRepository _eventRepo;
 
     public GuestService(
         IGuestRepository guestRepo,
         IMediaRepository mediaRepo,
-        ILikeRepository likeRepo)
+        ILikeRepository likeRepo,
+        IEventRepository eventRepo)
     {
         _guestRepo = guestRepo;
         _mediaRepo = mediaRepo;
         _likeRepo = likeRepo;
+        _eventRepo = eventRepo;
     }
 
-public async Task<GuestCreated> CreateGuestAsync(CreateGuestRequest request, CancellationToken ct = default)
-{
-    var guest = new Guest
+    public string HashToken(string token)
     {
-        EventId = request.EventId,
-        Nickname = request.Nickname,
-        Fingerprint = request.Fingerprint // Store fingerprint
-    };
+        using var sha256 = SHA256.Create();
+        var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(token));
+        return Convert.ToHexString(bytes).ToLower();
+    }
 
-    await _guestRepo.AddAsync(guest, ct);
 
-    return new GuestCreated(guest.GuestId, guest.Nickname, guest.EventId);
-}
+    public async Task<GuestCreated> CreateGuestAsync(CreateGuestRequest request, CancellationToken ct = default)
+        {
+             
+            //zaheshiraj token
+            var tokenHash = HashToken(request.EventToken);
+            var eventEntity = await _eventRepo.GetByInviteTokenAsync(tokenHash);
+
+            if (eventEntity == null || !eventEntity.IsActive)
+                throw new Exception("Invalid or inactive event");
+
+            // 2️⃣ Create guest
+            var guest = new Guest
+            {
+                EventId = eventEntity.EventId,
+                Nickname = request.Nickname.Trim()
+            };
+
+            await _guestRepo.AddAsync(guest);
+
+            return new GuestCreated(guest.GuestId, guest.Nickname, guest.EventId);
+        }
 
     public async Task<GuestDetail?> GetGuestDetailAsync(Guid guestId, CancellationToken ct = default)
     {
@@ -66,12 +87,4 @@ public async Task<GuestCreated> CreateGuestAsync(CreateGuestRequest request, Can
         return result.OrderByDescending(g => g.MediaCount);
     }
 
-    public async Task<GuestCreated?> FindByFingerprintAsync(Guid eventId, string fingerprint, CancellationToken ct = default)
-    {
-        var guest = await _guestRepo.GetByEventAndFingerprintAsync(eventId, fingerprint, ct);
-        
-        if (guest == null) return null;
-        
-        return new GuestCreated(guest.GuestId, guest.Nickname, guest.EventId);
-    }
 }

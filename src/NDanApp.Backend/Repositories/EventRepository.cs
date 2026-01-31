@@ -7,16 +7,16 @@ public class EventRepository : Repository<Event>, IEventRepository
 {
     public EventRepository(AppDbContext context) : base(context) { }
 
-    public async Task<Event?> GetByInviteTokenHashAsync(string tokenHash, CancellationToken ct = default)
+    public async Task<Event?> GetByInviteTokenAsync(string token, CancellationToken ct = default)
     {
         return await _context.Events
-            .FirstOrDefaultAsync(e => e.InviteTokenHash == tokenHash, ct);
+            .FirstOrDefaultAsync(e => e.InviteTokenHash == token, ct);
     }
 
-    public async Task<bool> IsInviteTokenUniqueAsync(string tokenHash, CancellationToken ct = default)
+    public async Task<bool> IsInviteTokenUniqueAsync(string token, CancellationToken ct = default)
     {
         return !await _context.Events
-            .AnyAsync(e => e.InviteTokenHash == tokenHash, ct);
+            .AnyAsync(e => e.InviteTokenHash == token, ct);
     }
 
     public async Task<IEnumerable<Event>> GetActiveEventsAsync(CancellationToken ct = default)

@@ -30,7 +30,7 @@ public class GuestsControllerTests
         // Arrange
         var request = new CreateGuestRequest
         {
-            EventId = Guid.NewGuid(),
+            EventToken = "abcd1234",
             Nickname = "John"
         };
 

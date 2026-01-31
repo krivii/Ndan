@@ -25,18 +25,26 @@ public class GuestsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(GuestCreated), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<GuestCreated>> CreateGuest(
-        [FromBody] CreateGuestRequest request,
-        CancellationToken ct)
+    public async Task<IActionResult> CreateGuest([FromBody] CreateGuestRequest request, CancellationToken ct)
     {
-        _logger.LogInformation("Creating guest for event {EventId}", request.EventId);
-        
-        var result = await _guestService.CreateGuestAsync(request, ct);
-        
-        return CreatedAtAction(
-            nameof(GetGuest), 
-            new { id = result.Id }, 
-            result);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        _logger.LogInformation("Creating guest for event {EventToken}", request.EventToken);
+
+        try
+        {
+            var result = await _guestService.CreateGuestAsync(request, ct);
+
+            return Ok(new CreateGuestResponse
+            {
+                GuestId = result.GuestId
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>
@@ -71,27 +79,5 @@ public class GuestsController : ControllerBase
         var guests = await _guestService.GetGuestsByEventAsync(eventId, ct);
         
         return Ok(guests);
-    }
-
-    /// <summary>
-    /// Find guest by fingerprint
-    /// </summary>
-    [HttpGet("find")]
-    [ProducesResponseType(typeof(GuestCreated), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<GuestCreated>> FindGuest(
-        [FromQuery] Guid eventId,
-        [FromQuery] string fingerprint,
-        CancellationToken ct)
-    {
-        _logger.LogInformation("Finding guest for event {EventId} with fingerprint {Fingerprint}", 
-            eventId, fingerprint);
-        
-        var guest = await _guestService.FindByFingerprintAsync(eventId, fingerprint, ct);
-        
-        if (guest == null)
-            return NotFound();
-        
-        return Ok(guest);
     }
 }
