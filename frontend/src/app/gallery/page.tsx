@@ -35,10 +35,22 @@ export default function GalleryPage() {
     );
   }
 
-  return (
-    <main className="min-h-screen p-6">
-      <h1 className="text-2xl font-bold mb-4">Gallery</h1>
-      {/* Render media items here */}
-    </main>
+return (
+    <div className="min-h-screen bg-red-100">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black p-4 flex justify-between items-center">
+        <h1 className="text-white text-lg">Gallery</h1>
+
+        <button
+          onClick={() => router.push('/upload')}
+          className="bg-yellow-400 text-black px-6 py-3 rounded-lg text-lg font-bold"
+        >
+          UPLOAD
+        </button>
+      </div>
+
+      <div className="pt-24 p-6">
+        <p>Gallery content placeholder</p>
+      </div>
+    </div>
   );
 }

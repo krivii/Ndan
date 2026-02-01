@@ -67,7 +67,7 @@ export default function SetNamePage() {
       );
 
       // Redirect to main gallery
-    router.replace(`/gallery/${eventToken}`);
+    router.replace(`/gallery`);
     } catch (err) {
       console.error(err);
       setError((err as Error).message || 'Something went wrong. Please try again.');
