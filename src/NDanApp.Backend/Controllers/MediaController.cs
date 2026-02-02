@@ -93,5 +93,19 @@ public class MediaController : ControllerBase
         
         return NoContent();
     }
+
+        /// <summary>
+    /// Request a new media ID and storage keys for upload
+    /// Frontend will upload directly to storage using these keys
+    /// </summary>
+    [HttpPost("upload-slot")]
+    [ProducesResponseType(typeof(UploadSlotResponse), StatusCodes.Status200OK)]
+    public ActionResult<UploadSlotResponse> GetUploadSlot([FromBody] UploadSlotRequest request, CancellationToken ct)
+    {
+        _logger.LogInformation("Generating upload slot for guest {GuestId}", request.GuestId);
+
+        var slot = _mediaService.GenerateUploadSlot(request);
+        return Ok(slot);
+    }
    
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -18,14 +20,15 @@ export default function Button({
   className,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'font-medium rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center';
-  
+  const baseStyles =
+    'font-medium rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center';
+
   const variants = {
-    primary: 'bg-primary hover:bg-primary-dark text-white shadow-md hover:shadow-lg active:scale-95',
-    secondary: 'bg-terracotta hover:bg-terracotta/90 text-white shadow-md hover:shadow-lg active:scale-95',
-    outline: 'border-2 border-primary text-primary hover:bg-primary hover:text-white active:scale-95',
+    primary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg active:scale-95',
+    secondary: 'bg-orange-500 hover:bg-orange-600 text-white shadow-md hover:shadow-lg active:scale-95',
+    outline: 'border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white active:scale-95',
   };
-  
+
   const sizes = {
     sm: 'px-4 py-2 text-sm gap-1.5',
     md: 'px-6 py-3 text-base gap-2',
@@ -40,7 +43,7 @@ export default function Button({
     >
       {loading ? (
         <>
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
           <span>Loading...</span>
         </>
       ) : (

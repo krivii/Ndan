@@ -1,138 +1,180 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { getSession } from '@/app/utils/session';
+import { createClient } from '@supabase/supabase-js';
+import Button from '../components/Button';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime'];
 
 type SelectedFile = {
   file: File;
+  mediaId?: string;
+  storageKey?: string;
+  thumbnailKey?: string;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  progress: number;
   error?: string;
 };
 
-const MAX_FILE_SIZE_MB = 50;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-const ALLOWED_TYPES = {
-  image: ['image/jpeg', 'image/png', 'image/webp', 'image/heic'],
-  video: ['video/mp4', 'video/webm', 'video/quicktime']
-};
 
 export default function UploadPage() {
-  const inputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<SelectedFile[]>([]);
+  const [globalError, setGlobalError] = useState<string | null>(null);
 
-  const validateFile = (file: File): string | null => {
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      return `File exceeds ${MAX_FILE_SIZE_MB} MB limit`;
-    }
+  const [mounted, setMounted] = useState(false);
 
-    const isImage = ALLOWED_TYPES.image.includes(file.type);
-    const isVideo = ALLOWED_TYPES.video.includes(file.type);
+useEffect(() => {
+  setMounted(true);
+}, []);
 
-    if (!isImage && !isVideo) {
-      return 'Unsupported file type';
-    }
+if (!mounted) {
+  return null; // Render nothing on server
+}
 
-    return null;
-  };
+  // Session check (can still early return for UI)
+  const session = getSession();
 
-const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (!e.target.files) return;
-
-  const selected: SelectedFile[] = Array.from(e.target.files).map(file => ({
-    file,
-    error: validateFile(file) || undefined,
-  }));
-
-  setFiles(selected);
-};
-
-
-  const formatSize = (bytes: number) => {
-    if (bytes < 1024 * 1024) {
-      return `${(bytes / 1024).toFixed(1)} KB`;
-    }
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  const getIcon = (file: File) => {
-    if (file.type.startsWith('image/')) return '🖼️';
-    if (file.type.startsWith('video/')) return '🎥';
-    return '📄';
-  };
-
-  return (
-    <main className="min-h-screen p-6 bg-gray-50 flex justify-center">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow p-6">
-        <h1 className="text-2xl font-semibold mb-2 text-center">
-          Upload media
-        </h1>
-
-        <p className="text-gray-600 mb-6 text-center">
-          Photos and videos from your device
+  if (!session) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-600">
+          Please join the event using the QR code.
         </p>
+      </main>
+    );
+  }
 
-        {/* Hidden file input */}
+    const { guestId, eventToken } = session;
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const newFiles: SelectedFile[] = selectedFiles.map((file) => {
+      let error: string | undefined;
+      if (!SUPPORTED_TYPES.includes(file.type)) error = 'Unsupported file type';
+      if (file.size > MAX_FILE_SIZE) error = 'File too large (max 50MB)';
+      return { file, status: 'pending', progress: 0, error };
+    });
+    setFiles((prev) => [...prev, ...newFiles]);
+  };
+
+  const uploadFile = async (fileObj: SelectedFile) => {
+    if (!session) {
+      fileObj.status = 'error';
+      fileObj.error = 'No session. Cannot upload.';
+      setFiles([...files]);
+      return;
+    }
+
+    try {
+      fileObj.status = 'uploading';
+      setFiles([...files]);
+
+      // 1️⃣ Request upload slot from backend
+      const res = await fetch(`${API_BASE}/media/upload-slot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guestId: session.guestId, fileName: fileObj.file.name })
+      });
+
+      if (!res.ok) throw new Error('Failed to get upload slot');
+      const slot = await res.json();
+
+      fileObj.mediaId = slot.mediaId;
+      fileObj.storageKey = slot.storageKey;
+      fileObj.thumbnailKey = slot.thumbnailKey;
+
+      // 2️⃣ Upload file directly to Supabase
+    const { data, error: uploadError } = await supabase.storage
+    .from('NDan-media') // your bucket name
+    .upload(slot.storageKey!, fileObj.file, {
+        cacheControl: '3600',
+        upsert: false
+    });
+
+    if (uploadError) throw uploadError;
+
+      // 3️⃣ Send metadata to backend
+      const metaRes = await fetch(`${API_BASE}/media/metadata`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mediaId: slot.mediaId,
+          eventId: session.eventId,
+          guestId: session.guestId,
+          mediaType: fileObj.file.type.startsWith('video') ? 'Video' : 'Image',
+          storageKey: slot.storageKey,
+          thumbnailKey: slot.thumbnailKey,
+          mimeType: fileObj.file.type,
+          fileSizeBytes: fileObj.file.size
+        })
+      });
+
+      if (!metaRes.ok) throw new Error('Failed to save metadata');
+
+      fileObj.status = 'success';
+      fileObj.progress = 100;
+      setFiles([...files]);
+    } catch (err: unknown) {
+      fileObj.status = 'error';
+      fileObj.error = (err as Error).message || 'Upload failed';
+      setFiles([...files]);
+    }
+  };
+
+  const startUpload = () => {
+    files
+      .filter((f) => f.status === 'pending' && !f.error)
+      .forEach((f) => uploadFile(f));
+  };
+
+return (
+    <main className="min-h-screen p-6 bg-gray-50 flex flex-col items-center">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow p-6 flex flex-col items-center">
+        <h1 className="text-2xl font-semibold mb-4">Uploaded Media</h1>
+
         <input
-          ref={inputRef}
-          type="file"
-          multiple
-          accept="image/*,video/*"
-          onChange={onFileChange}
-          className="hidden"
+        type="file"
+        multiple
+        accept={SUPPORTED_TYPES.join(',')}
+        onChange={onFileChange}
+        className="w-full mb-4 px-4 py-3 rounded-lg border border-gray-300 bg-white cursor-pointer text-gray-700"
         />
 
-        {/* Select files */}
-        <button
-          onClick={() => inputRef.current?.click()}
-          className="w-full bg-blue-600 text-white py-3 rounded-full font-semibold"
+
+        <Button
+        onClick={() => {
+            console.log('Start Upload button clicked!');
+            console.log('Files to upload:', files);
+            startUpload(); // call your actual upload function
+        }}
+        size="md"
         >
-          Select files
-        </button>
+        Start Upload
+        </Button>
 
-        {/* File list */}
         {files.length > 0 && (
-          <div className="mt-6 space-y-3">
-            {files.map(({ file, error }, idx) => (
-              <div
-                key={idx}
-                className={`flex items-center justify-between rounded-lg border p-3 ${
-                  error ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">{getIcon(file)}</span>
+        <ul className="mt-4 w-full space-y-2">
+            {files.map((f, i) => (
+            <li key={i} className="p-2 border rounded-lg flex justify-between items-center">
+                {/* Access name and size from the nested file object */}
+                <span>{f.file.name} ({Math.round(f.file.size / 1024)} KB)</span>
 
-                  <div>
-                    <p className="text-sm font-medium truncate max-w-[180px]">
-                      {file.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {formatSize(file.size)}
-                    </p>
-                  </div>
-                </div>
-
-                {error && (
-                  <span className="text-xs text-red-600 font-medium">
-                    {error}
-                  </span>
-                )}
-              </div>
+                <span>
+                {f.status === 'uploading' && <span>Uploading… {f.progress}%</span>}
+                {f.status === 'success' && <span className="text-green-600">✓</span>}
+                {f.status === 'error' && <span className="text-red-600">✗ {f.error}</span>}
+                </span>
+            </li>
             ))}
-          </div>
+        </ul>
         )}
-
-        {/* Upload button (disabled until valid files exist) */}
-        {files.some(f => !f.error) && (
-          <button
-            className="mt-6 w-full bg-green-600 text-white py-3 rounded-full font-semibold"
-          >
-            Upload
-          </button>
-        )}
-
-        <p className="mt-4 text-xs text-gray-500 text-center">
-          Max file size: {MAX_FILE_SIZE_MB} MB · Images & videos only
-        </p>
       </div>
     </main>
   );

@@ -113,3 +113,17 @@ public class SaveMediaMetadataRequest
     [Required]
     public MediaType MediaType{ get; set; }  
 }
+
+public class UploadSlotRequest
+{
+    public Guid GuestId { get; set; }
+    public string? FileName { get; set; }
+}
+
+public class UploadSlotResponse
+{
+    public Guid MediaId { get; set; }
+    public string StorageKey { get; set; } = null!;
+    public string ThumbnailKey { get; set; } = null!;
+}
+

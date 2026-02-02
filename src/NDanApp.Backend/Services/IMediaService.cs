@@ -8,4 +8,6 @@ public interface IMediaService
     Task<IEnumerable<MediaListItem>> GetMediaByEventAsync(Guid eventId, Guid? currentGuestId = null, CancellationToken ct = default);
     Task<MediaDetail?> GetMediaDetailAsync(Guid mediaId, Guid? currentGuestId = null, CancellationToken ct = default);
     Task<bool> DeleteMediaAsync(Guid mediaId, CancellationToken ct = default);
+    UploadSlotResponse GenerateUploadSlot(UploadSlotRequest request);
+    
 }

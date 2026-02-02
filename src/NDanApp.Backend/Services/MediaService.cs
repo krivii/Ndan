@@ -11,6 +11,7 @@ public class MediaService : IMediaService
     private readonly ILikeRepository _likeRepo;
     private readonly IGuestRepository _guestRepo;
 
+
     public MediaService(
         IMediaRepository mediaRepo,
         ILikeRepository likeRepo,
@@ -96,6 +97,26 @@ public class MediaService : IMediaService
         
         await _mediaRepo.DeleteAsync(mediaId, ct);
         return true;
+    }
+
+        /// <summary>
+    /// Generate unique storage keys and media ID
+    /// Frontend will use the storageKey to upload directly to Supabase
+    /// </summary>
+    public UploadSlotResponse GenerateUploadSlot(UploadSlotRequest request)
+    {
+        var mediaId = Guid.NewGuid();
+        var fileExt = request.FileName?.Split('.').LastOrDefault() ?? "bin";
+
+        var storageKey = $"{mediaId}.{fileExt}";
+        var thumbnailKey = $"{mediaId}-thumb.{fileExt}";
+
+        return new UploadSlotResponse
+        {
+            MediaId = mediaId,
+            StorageKey = storageKey,
+            ThumbnailKey = thumbnailKey
+        };
     }
 
 }

@@ -1,31 +1,37 @@
 'use client';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Cookies from 'js-cookie';
+import { getSession, setSession } from '@/app/utils/session';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function SetNamePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const eventToken = searchParams.get('event'); // token from URL query
+  const eventTokenFromUrl = searchParams.get('event'); // token from URL query
 
   const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Guard: must have event token
+  // 🛡 Guard: redirect if no token
   useEffect(() => {
-    if (!eventToken) {
-      router.replace('/'); // redirect to landing if no token
+    if (!eventTokenFromUrl) {
+      router.replace('/');
+      return;
     }
-  }, [eventToken, router]);
+
+    // If session exists, redirect to gallery immediately
+    const session = getSession();
+    if (session && session.eventToken === eventTokenFromUrl) {
+      router.replace('/gallery');
+    }
+  }, [eventTokenFromUrl, router]);
 
   const submit = async () => {
     const name = nickname.trim();
-
     if (!name) {
       setError('Please enter your name.');
       return;
@@ -39,11 +45,11 @@ export default function SetNamePage() {
     setError(null);
 
     try {
-      // Call backend API
+      // Call backend API to create guest
       const res = await fetch(`${API_BASE_URL}/guests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname: name, eventToken })
+        body: JSON.stringify({ nickname: name, eventToken: eventTokenFromUrl })
       });
 
       if (!res.ok) {
@@ -53,21 +59,15 @@ export default function SetNamePage() {
 
       const data = await res.json();
 
-      // Set session cookie for the guest
-      Cookies.set(
-        'event_session',
-        JSON.stringify({
-          guestId: data.guestId,
-          eventToken
-        }),
-        {
-          path: '/',
-          expires: 30 // 30 days
-        }
-      );
+      // ✅ Use utils to store session
+      setSession({
+        guestId: data.guestId,
+        eventToken: eventTokenFromUrl!,
+        eventId: data.eventId 
+      });
 
-      // Redirect to main gallery
-    router.replace(`/gallery`);
+      // Redirect to gallery
+      router.replace('/gallery');
     } catch (err) {
       console.error(err);
       setError((err as Error).message || 'Something went wrong. Please try again.');
@@ -76,7 +76,7 @@ export default function SetNamePage() {
     }
   };
 
-  if (!eventToken) return null; // prevent flicker
+  if (!eventTokenFromUrl) return null; // prevent flicker
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-[var(--dusty-blue-light)] p-6">
