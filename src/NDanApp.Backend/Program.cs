@@ -8,12 +8,13 @@ using NDanApp.Backend.Models.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure PostgreSQL enum mapping
-NpgsqlConnection.GlobalTypeMapper.MapEnum<MediaType>("media_type_enum");
-
-// Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        o => o.MapEnum<MediaType>("media_type_enum")
+    );
+});
 
 // Repositories
 builder.Services.AddScoped<IEventRepository, EventRepository>();

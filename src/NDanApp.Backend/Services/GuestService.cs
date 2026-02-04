@@ -52,7 +52,7 @@ public class GuestService : IGuestService
 
             await _guestRepo.AddAsync(guest);
 
-            return new GuestCreated(guest.GuestId, guest.Nickname, guest.EventId);
+            return new GuestCreated(guest.GuestId, guest.Nickname, guest.EventId, request.EventToken);
         }
 
     public async Task<GuestDetail?> GetGuestDetailAsync(Guid guestId, CancellationToken ct = default)

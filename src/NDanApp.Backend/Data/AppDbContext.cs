@@ -65,11 +65,11 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
 
             entity.Property(m => m.MediaType)
-                .HasConversion<string>()
-                .HasColumnType("media_type_enum");
+                .HasColumnType("media_type_enum")
+                .IsRequired();
 
             entity.Property(m => m.ProcessingStatus)
-                .HasDefaultValue(ProcessingStatus.Ready);
+                .HasDefaultValue(ProcessingStatus.Uploaded);
 
             entity.Property(m => m.CreatedUtc)
                 .HasDefaultValueSql("NOW()");

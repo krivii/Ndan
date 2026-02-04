@@ -41,7 +41,7 @@ CREATE TABLE media (
     
     created_utc             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
-    processing_status       SMALLINT NOT NULL DEFAULT 2
+    processing_status       SMALLINT NOT NULL DEFAULT 0
     -- 0=uploaded, 1=processing, 2=ready, 3=failed
 );
 

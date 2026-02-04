@@ -1,4 +1,5 @@
 
+using NDanApp.Backend.Data;
 using NDanApp.Backend.Models.DTOs;
 using NDanApp.Backend.Models.Entities;
 using NDanApp.Backend.Repositories;
@@ -10,16 +11,19 @@ public class MediaService : IMediaService
     private readonly IMediaRepository _mediaRepo;
     private readonly ILikeRepository _likeRepo;
     private readonly IGuestRepository _guestRepo;
+    private readonly AppDbContext _context;
 
 
     public MediaService(
         IMediaRepository mediaRepo,
         ILikeRepository likeRepo,
-        IGuestRepository guestRepo)
+        IGuestRepository guestRepo,
+        AppDbContext context)   
     {
         _mediaRepo = mediaRepo;
         _likeRepo = likeRepo;
         _guestRepo = guestRepo;
+        _context = context;
     }
 
     
@@ -70,6 +74,9 @@ public class MediaService : IMediaService
         // Just save metadata - file already in Supabase!
         var mediaType = request.MediaType;
 
+        var existingEvent = await _context.Events.FindAsync(request.EventId);
+        if (existingEvent == null) throw new Exception("Event not found");
+
         var media = new Media
         {
             EventId = request.EventId,
@@ -78,7 +85,7 @@ public class MediaService : IMediaService
             StorageKey = request.StorageKey,
             MimeType = request.MimeType,
             FileSizeBytes = request.FileSizeBytes,
-            ProcessingStatus = ProcessingStatus.Ready
+            ProcessingStatus = ProcessingStatus.Uploaded
         };
 
         await _mediaRepo.AddAsync(media, ct);

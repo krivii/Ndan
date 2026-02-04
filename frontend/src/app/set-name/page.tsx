@@ -62,8 +62,8 @@ export default function SetNamePage() {
       // ✅ Use utils to store session
       setSession({
         guestId: data.guestId,
-        eventToken: eventTokenFromUrl!,
-        eventId: data.eventId 
+        eventToken: data.eventToken,
+        eventId: data.eventId,  
       });
 
       // Redirect to gallery

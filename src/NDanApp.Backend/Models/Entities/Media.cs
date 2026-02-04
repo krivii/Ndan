@@ -48,7 +48,7 @@ public class Media
 
     [Required]
     [Column("processing_status")]
-    public ProcessingStatus ProcessingStatus { get; set; } = ProcessingStatus.Ready;
+    public ProcessingStatus ProcessingStatus { get; set; } = ProcessingStatus.Uploaded;
 
     [ForeignKey("EventId")]
     public Event Event { get; set; } = null!;

@@ -1,9 +1,10 @@
+// utils/session.ts
 import Cookies from 'js-cookie';
 
 export interface EventSession {
   guestId: string;
   eventToken: string;
-  eventId: string; 
+  eventId: string;
 }
 
 const COOKIE_NAME = 'event_session';
@@ -13,8 +14,9 @@ export function getSession(): EventSession | null {
   if (!cookie) return null;
 
   try {
-    const session = JSON.parse(cookie) as EventSession;
-    if (!session.guestId || !session.eventToken) return null;
+    const decoded = decodeURIComponent(cookie);
+    const session = JSON.parse(decoded) as EventSession;
+    if (!session.guestId || !session.eventToken || !session.eventId) return null;
     return session;
   } catch {
     return null;

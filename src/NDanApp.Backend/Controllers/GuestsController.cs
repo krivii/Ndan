@@ -36,9 +36,12 @@ public class GuestsController : ControllerBase
         {
             var result = await _guestService.CreateGuestAsync(request, ct);
 
+
             return Ok(new CreateGuestResponse
             {
-                GuestId = result.GuestId
+                GuestId = result.GuestId,
+                EventToken = request.EventToken,
+                EventId = result.EventId
             });
         }
         catch (Exception ex)

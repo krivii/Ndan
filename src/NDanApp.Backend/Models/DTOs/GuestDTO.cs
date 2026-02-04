@@ -18,13 +18,16 @@ namespace NDanApp.Backend.Models.DTOs
     public class CreateGuestResponse
     {
         public Guid GuestId { get; set; }
-    }
+        public string EventToken { get; set; } 
+        public Guid EventId { get; set; }
+        }
 
     // Optional: for returning guest info
     public record GuestCreated(
         Guid GuestId,
         string Nickname,
-        Guid EventId
+        Guid EventId,
+        string EventToken
     );
 
     public record GuestListItem(

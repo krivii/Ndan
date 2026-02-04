@@ -51,7 +51,7 @@ if (!mounted) {
     );
   }
 
-    const { guestId, eventToken } = session;
+    const { guestId, eventToken, eventId } = session;
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -102,19 +102,19 @@ if (!mounted) {
 
       // 3️⃣ Send metadata to backend
       const metaRes = await fetch(`${API_BASE}/media/metadata`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mediaId: slot.mediaId,
-          eventId: session.eventId,
-          guestId: session.guestId,
-          mediaType: fileObj.file.type.startsWith('video') ? 'Video' : 'Image',
-          storageKey: slot.storageKey,
-          thumbnailKey: slot.thumbnailKey,
-          mimeType: fileObj.file.type,
-          fileSizeBytes: fileObj.file.size
-        })
-      });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      eventId: session.eventId,
+      guestId: session.guestId,
+      fileName: fileObj.file.name,
+      storageKey: slot.storageKey,
+      fileUrl: slot.storageKey,
+      mimeType: fileObj.file.type,
+      fileSizeBytes: fileObj.file.size,
+      mediaType: fileObj.file.type.startsWith('video') ? 'video' : 'image'
+    })
+  });
 
       if (!metaRes.ok) throw new Error('Failed to save metadata');
 
