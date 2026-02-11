@@ -83,6 +83,7 @@ public class MediaService : IMediaService
             GuestId = request.GuestId,
             MediaType = mediaType,
             StorageKey = request.StorageKey,
+            ThumbnailKey = request.ThumbnailKey,
             MimeType = request.MimeType,
             FileSizeBytes = request.FileSizeBytes,
             ProcessingStatus = ProcessingStatus.Uploaded
@@ -113,10 +114,16 @@ public class MediaService : IMediaService
     public UploadSlotResponse GenerateUploadSlot(UploadSlotRequest request)
     {
         var mediaId = Guid.NewGuid();
+
+        // Determine media folder based on MIME type
+        string mediaFolder = request.MediaType == MediaType.Video ? "video" : "image";
+
         var fileExt = request.FileName?.Split('.').LastOrDefault() ?? "bin";
 
-        var storageKey = $"{mediaId}.{fileExt}";
-        var thumbnailKey = $"{mediaId}-thumb.{fileExt}";
+        var thumbnailExt = "jpg";
+
+        var storageKey   = $"{mediaFolder}/original/{mediaId}.{fileExt}";
+        var thumbnailKey = $"{mediaFolder}/thumbnail/{mediaId}-thumb.{thumbnailExt}";
 
         return new UploadSlotResponse
         {

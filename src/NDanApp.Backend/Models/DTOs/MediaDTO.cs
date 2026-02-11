@@ -103,6 +103,10 @@ public class SaveMediaMetadataRequest
     public string StorageKey { get; set; } = string.Empty;
 
     [Required]
+    [MaxLength(512)]
+    public string ThumbnailKey { get; set; } = string.Empty;
+
+    [Required]
     public string FileUrl { get; set; } = string.Empty;
 
     [MaxLength(100)]
@@ -118,6 +122,7 @@ public class UploadSlotRequest
 {
     public Guid GuestId { get; set; }
     public string? FileName { get; set; }
+    public MediaType MediaType { get; set; }
 }
 
 public class UploadSlotResponse
