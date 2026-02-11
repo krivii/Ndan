@@ -122,7 +122,7 @@ public class UploadSlotRequest
 {
     public Guid GuestId { get; set; }
     public string? FileName { get; set; }
-    public MediaType MediaType { get; set; }
+    public string? MimeType { get; set; }
 }
 
 public class UploadSlotResponse

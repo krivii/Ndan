@@ -116,14 +116,14 @@ public class MediaService : IMediaService
         var mediaId = Guid.NewGuid();
 
         // Determine media folder based on MIME type
-        string mediaFolder = request.MediaType == MediaType.Video ? "video" : "image";
+        string mediaFolder = request.MimeType == "image" ? "image" : "video";
 
         var fileExt = request.FileName?.Split('.').LastOrDefault() ?? "bin";
 
         var thumbnailExt = "jpg";
 
         var storageKey   = $"{mediaFolder}/original/{mediaId}.{fileExt}";
-        var thumbnailKey = $"{mediaFolder}/thumbnail/{mediaId}-thumb.{thumbnailExt}";
+            var thumbnailKey = $"{mediaFolder}/thumbnail/{mediaId}-thumb.{thumbnailExt}";
 
         return new UploadSlotResponse
         {

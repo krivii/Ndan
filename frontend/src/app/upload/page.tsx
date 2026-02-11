@@ -8,7 +8,7 @@ import { Upload, X, CheckCircle, AlertCircle, Loader2, ArrowLeft, Image as Image
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 const BUCKET_NAME = 'NDan-media';
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime'];
 
 type SelectedFile = {
@@ -201,7 +201,7 @@ export default function UploadPage() {
         updated[index].progress = 10;
         return updated;
       });
-
+   const isVideo = fileObj.file.type.startsWith('video');
       // 1️⃣ Request upload slot from backend
       const slotRes = await fetch(`${API_BASE}/media/upload-slot`, {
         method: 'POST',
@@ -209,7 +209,7 @@ export default function UploadPage() {
         body: JSON.stringify({
         guestId,
         fileName: fileObj.file.name,
-        mimeType: fileObj.file.type,          // ← send this
+        mimeType: isVideo ? 'video' : 'image',
       }),
       });
 
@@ -244,7 +244,7 @@ export default function UploadPage() {
       });
 
       // 3️⃣ Generate and upload thumbnail
-      const isVideo = fileObj.file.type.startsWith('video');
+   
       const thumbnailBlob = isVideo
         ? await generateVideoThumbnail(fileObj.file)
         : await generateImageThumbnail(fileObj.file);
